@@ -1,4 +1,9 @@
-streamlit==1.40.0
-pandas==2.2.2
-matplotlib==3.9.0
-missingno==0.5.2
+streamlit
+pandas
+matplotlib
+missingno
+seaborn
+numpy
+random
+requests
+wordcloud
