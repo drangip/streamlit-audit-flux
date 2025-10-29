@@ -123,7 +123,7 @@ titlemax = round(dftitle['nb_caracteres'].max(), 2)
 titlemin = round(dftitle['nb_caracteres'].min(), 2)
 
 # --- Bloc de texte Streamlit ---
-st.markdown("### a. Analyse de la taille des titres")
+st.markdown("### b. Analyse de la taille des titres")
 st.write("*(La longueur maximale recommandée est de **150 caractères**)*")
 
 col1, col2, col3, col4 = st.columns(4)
