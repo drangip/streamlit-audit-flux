@@ -1,0 +1,13 @@
+# Environnement virtuel
+venc/
+venv/
+.env
+
+# Fichiers temporaires
+__pycache__/
+*.pyc
+.DS_Store
+
+# Dossiers spécifiques à Streamlit ou VSCode
+.streamlit/
+.vscode/
