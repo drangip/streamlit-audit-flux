@@ -59,7 +59,7 @@ st.markdown("## 03.Analyse des éléments du flux")
 st.markdown("---")
 
 
-st.markdown("### a.Analyse des doublons")
+st.markdown("### a. Analyse des doublons")
 
 
 # --- Calculs ---
@@ -102,12 +102,6 @@ wedges, texts, autotexts = ax.pie(
     pctdistance=0.7
 )
 
-
-
-# 🔹 Titre
-st.markdown("### b.Analyse des longueurs des titres")
-
-
 # 🔹 Style du texte
 for autotext in autotexts:
     autotext.set_color('black')
@@ -132,7 +126,7 @@ titlemax = round(dftitle['nb_caracteres'].max(), 2)
 titlemin = round(dftitle['nb_caracteres'].min(), 2)
 
 # --- Bloc de texte Streamlit ---
-st.subheader("Analyse de la longueur des titres")
+st.markdown("### a. Analyse des doublons")
 st.write("*(La longueur maximale recommandée est de **150 caractères**)*")
 
 col1, col2, col3, col4 = st.columns(4)
