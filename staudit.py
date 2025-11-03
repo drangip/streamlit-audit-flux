@@ -12,34 +12,49 @@ import seaborn as sns
 import missingno as msno
 from wordcloud import WordCloud
 
+# =========================================================
+# FONCTION : détection automatique du séparateur
+# =========================================================
+def detect_separator(uploaded_file):
+    sample = uploaded_file.read(2048).decode("utf-8")
+    uploaded_file.seek(0)
+    dialect = csv.Sniffer().sniff(sample, delimiters=[",", ";", "|"])
+    return dialect.delimiter
 
-# ======================================
-# 01. UPLOAD DU FLUX
-# ======================================
-st.title("Feed Audit - sample")
-st.markdown("This application is an extract from our automatic shopping feed audit. Contact us if you are interested in a more in-depth analysis.")
 
-st.divider()
+# =========================================================
+# FONCTION : chargement du fichier (mise en cache)
+# =========================================================
+@st.cache_data
+def load_data(uploaded_file):
+    sep = detect_separator(uploaded_file)
+    df = pd.read_csv(uploaded_file, sep=sep)
+    return df, sep
 
-st.subheader("📥 1. Import du flux produit")
 
-uploaded_file = st.file_uploader("Charge ton flux (.csv)", type=["csv"])
+# =========================================================
+# 🧮 UPLOAD DU FICHIER
+# =========================================================
+
+st.sidebar.header("Plotting Demo")
+uploaded_file = st.file_uploader("📂 Charge ton flux produit", type=["csv"])
+
 if not uploaded_file:
-    st.info("💡 En attente du fichier...")
+    st.info("⬆️ En attente du chargement du fichier CSV.")
     st.stop()
 
-# Lecture intelligente du CSV avec détection du séparateur
+# Lecture + cache
 try:
-    flux = pd.read_csv(uploaded_file, sep=None, engine='python')
-    st.success("✅ Fichier chargé avec succès !")
+    flux, sep = load_data(uploaded_file)
+    st.success(f"✅ Fichier chargé avec succès ! Séparateur détecté : `{sep}`")
 except Exception as e:
-    st.error(f"Erreur de lecture du fichier : {e}")
+    st.error(f"Erreur lors du chargement : {e}")
     st.stop()
 
 # ======================================
 # 📊 02. PREMIÈRES ANALYSES
 # ======================================
-st.subheader("🔍 2. Premières analyses")
+st.subheader("2. Premières analyses")
 st.write(f"Le flux contient **{flux.shape[0]} produits** et **{flux.shape[1]} colonnes.**")
 
 st.write("### Aperçu du flux")
