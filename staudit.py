@@ -1,152 +1,145 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import random
-import requests
-from matplotlib import pyplot as plt
-import seaborn as sns
-
+import matplotlib.pyplot as plt
 import missingno as msno
+import csv
 
-from wordcloud import WordCloud
+# =========================================================
+# 🧩 CONFIGURATION DE L'APPLICATION
+# =========================================================
+st.set_page_config(
+    page_title="Audit de flux produits",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-# Titre de l'app
-st.title("Audit de flux produits - sample")
-
-st.markdown("## 01. Upload du flux à analyser")
+st.title("🧠 Audit de flux produits")
+st.markdown("Analyse automatique de la qualité de ton flux CSV (Google Merchant, Criteo, etc.)")
 st.markdown("---")
 
-
-# Import des données
-uploaded_file = st.file_uploader("Charge ton ton flux produit", type=["csv"])
-
-if uploaded_file:
-    flux = pd.read_csv(uploaded_file, sep=",")
-    st.success("Fichier chargé avec succès !")
-else:
-    st.info("En attente du chargement du fichier...")
-    st.stop() 
+# =========================================================
+# ⚙️ FONCTION : détection automatique du séparateur
+# =========================================================
+def detect_separator(uploaded_file):
+    sample = uploaded_file.read(2048).decode("utf-8")
+    uploaded_file.seek(0)
+    dialect = csv.Sniffer().sniff(sample, delimiters=[",", ";", "|"])
+    return dialect.delimiter
 
 
-st.markdown("## 02. Premières analyses")
-st.markdown("---")
+# =========================================================
+# 🧠 FONCTION : chargement du fichier (mise en cache)
+# =========================================================
+@st.cache_data
+def load_data(uploaded_file):
+    sep = detect_separator(uploaded_file)
+    df = pd.read_csv(uploaded_file, sep=sep)
+    return df, sep
 
 
-st.write(f"Le flux comprend {flux.shape[0]} lignes (produits) et {flux.shape[1]} colonnes.")
+# =========================================================
+# 🧮 UPLOAD DU FICHIER
+# =========================================================
+uploaded_file = st.file_uploader("📂 Charge ton flux produit", type=["csv"])
 
-st.write("Vous trouverez ci-dessous un aperçu du flux :", flux.sample(5))
+if not uploaded_file:
+    st.info("⬆️ En attente du chargement du fichier CSV.")
+    st.stop()
 
-st.write("Visualisation des données manquantes :")
-
-# Création du graphique missingno
-fig, ax = plt.subplots(figsize=(25, 5))
-msno.matrix(flux, ax=ax)
-
-# Affichage dans Streamlit
-st.pyplot(fig)
-
-
-st.write("Les colonnes suivantes du flux sont vides :")
-
-fluxna = flux.loc[:, flux.isna().all()]
-
-if fluxna.shape[1] == 0:
-    st.success("Aucune colonne entièrement vide dans le flux.")
-else:
-    st.write(list(fluxna.columns))
+# Lecture + cache
+try:
+    flux, sep = load_data(uploaded_file)
+    st.success(f"✅ Fichier chargé avec succès ! Séparateur détecté : `{sep}`")
+except Exception as e:
+    st.error(f"Erreur lors du chargement : {e}")
+    st.stop()
 
 
-st.markdown("## 03.Analyse des éléments du flux")
-st.markdown("---")
+# =========================================================
+# 🧭 NAVIGATION PAR ONGLETS
+# =========================================================
+tab1, tab2, tab3 = st.tabs(["📊 Aperçu & infos générales", "🔍 Qualité des données", "🧾 Analyse des titres"])
 
+# =========================================================
+# 🔹 ONGLET 1 : INFOS GÉNÉRALES
+# =========================================================
+with tab1:
+    st.header("01. Aperçu du flux")
+    st.write(f"Le flux contient **{flux.shape[0]} produits** et **{flux.shape[1]} colonnes.**")
+    st.dataframe(flux.sample(min(5, len(flux))))
 
-st.markdown("### a. Analyse des doublons")
+    with st.expander("Voir toutes les colonnes disponibles"):
+        st.write(list(flux.columns))
 
+# =========================================================
+# 🔹 ONGLET 2 : QUALITÉ DES DONNÉES
+# =========================================================
+with tab2:
+    st.header("02. Analyse de la qualité des données")
 
-# --- Calculs ---
-nbtitre = round(len(flux['title']), 2)
-nbtitreunique = round(len(flux['title'].unique()), 2)
-nbtitredoublon = nbtitre - nbtitreunique
+    st.subheader("Visualisation des données manquantes")
+    fig, ax = plt.subplots(figsize=(25, 5))
+    msno.matrix(flux, ax=ax)
+    st.pyplot(fig)
 
-# --- Affichage texte Streamlit ---
-st.write(f"Le flux comporte **{nbtitre}** titres dont **{nbtitreunique}** sont uniques, soit **{nbtitredoublon}** doublons.")
-
-# --- DataFrame récap ---
-pourcentagetitre = {
-    "Titres uniques": nbtitreunique,
-    "Titres en doublon": nbtitredoublon
-}
-st.dataframe(pd.DataFrame(pourcentagetitre, index=["Quantité"]))
-
-# --- Création du graphique ---
-fig, ax = plt.subplots(figsize=(5, 5))
-
-# 🔹 Couleurs personnalisées avec opacité
-colors = []
-for label in pourcentagetitre.keys():
-    if "doublon" in label.lower():
-        colors.append((1, 0, 0, 0.6))  # rouge semi-transparent
-    elif "unique" in label.lower():
-        colors.append((0, 0.7, 0, 0.6))  # vert semi-transparent
+    st.subheader("Colonnes entièrement vides")
+    fluxna = flux.loc[:, flux.isna().all()]
+    if fluxna.shape[1] == 0:
+        st.success("🎉 Aucune colonne entièrement vide !")
     else:
-        colors.append((0.6, 0.6, 0.6, 0.5))  # gris clair par défaut
+        st.warning(f"{fluxna.shape[1]} colonnes entièrement vides :")
+        st.write(list(fluxna.columns))
 
-# 🔹 Camembert (donut)
-wedges, texts, autotexts = ax.pie(
-    pourcentagetitre.values(),
-    labels=pourcentagetitre.keys(),
-    autopct='%1.1f%%',
-    startangle=90,
-    counterclock=False,
-    wedgeprops={'width': 0.4, 'edgecolor': 'white'},
-    colors=colors,
-    pctdistance=0.7
-)
+# =========================================================
+# 🔹 ONGLET 3 : ANALYSE DES TITRES
+# =========================================================
+with tab3:
+    st.header("03. Analyse des titres")
 
-# 🔹 Style du texte
-for autotext in autotexts:
-    autotext.set_color('black')
-    autotext.set_fontsize(6)
-    autotext.set_fontweight('bold')
+    if "title" not in flux.columns:
+        st.error("❌ La colonne 'title' est introuvable dans le flux.")
+        st.stop()
 
-plt.tight_layout()
+    # --- Doublons ---
+    st.subheader("a. Doublons")
+    nbtitre = len(flux['title'])
+    nbtitreunique = len(flux['title'].unique())
+    nbtitredoublon = nbtitre - nbtitreunique
 
-# --- Affichage dans Streamlit ---
-st.pyplot(fig)
+    st.write(f"Le flux comporte **{nbtitre}** titres dont **{nbtitreunique}** uniques, soit **{nbtitredoublon}** doublons.")
 
-# --- Calculs de longueur de titres ---
-dftitle = pd.DataFrame(flux['title'])
-dftitle['nb_caracteres'] = dftitle['title'].astype(str).str.len()
+    pourcentagetitre = {
+        "Titres uniques": nbtitreunique,
+        "Titres en doublon": nbtitredoublon
+    }
 
-titlemean = round(dftitle['nb_caracteres'].mean(), 2)
-titlemedian = round(dftitle['nb_caracteres'].median(), 2)
-titlemax = round(dftitle['nb_caracteres'].max(), 2)
-titlemin = round(dftitle['nb_caracteres'].min(), 2)
+    fig, ax = plt.subplots(figsize=(5, 5))
+    wedges, texts, autotexts = ax.pie(
+        pourcentagetitre.values(),
+        labels=pourcentagetitre.keys(),
+        autopct='%1.1f%%',
+        startangle=90,
+        wedgeprops={'width': 0.4, 'edgecolor': 'white'},
+        colors=[(0, 0.7, 0, 0.6), (1, 0, 0, 0.6)]
+    )
+    st.pyplot(fig)
 
-# --- Bloc de texte Streamlit ---
-st.markdown("### b. Analyse de la taille des titres")
-st.write("*(La longueur maximale recommandée est de **150 caractères**)*")
+    # --- Longueur des titres ---
+    st.subheader("b. Longueur des titres")
+    st.caption("*(La longueur maximale recommandée est de 150 caractères)*")
 
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Moyenne", f"{titlemean} car.")
-col2.metric("Médiane", f"{titlemedian} car.")
-col3.metric("Min", f"{titlemin} car.")
-col4.metric("Max", f"{titlemax} car.")
+    dftitle = pd.DataFrame(flux['title'])
+    dftitle['nb_caracteres'] = dftitle['title'].astype(str).str.len()
 
-# --- Histogramme Streamlit ---
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.hist(
-    dftitle['nb_caracteres'],
-    bins=80,
-    color='skyblue',
-    edgecolor='black'
-)
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Moyenne", round(dftitle['nb_caracteres'].mean(), 2))
+    col2.metric("Médiane", round(dftitle['nb_caracteres'].median(), 2))
+    col3.metric("Min", round(dftitle['nb_caracteres'].min(), 2))
+    col4.metric("Max", round(dftitle['nb_caracteres'].max(), 2))
 
-# Titre et axes
-ax.set_title("Distribution du nombre de caractères des titres", fontsize=14, fontweight='bold')
-ax.set_xlabel("Nombre de caractères")
-ax.set_ylabel("Nombre de titres")
-ax.legend()
-
-plt.tight_layout()
-st.pyplot(fig)
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.hist(dftitle['nb_caracteres'], bins=80, color='skyblue', edgecolor='black')
+    ax.set_title("Distribution du nombre de caractères des titres", fontsize=14)
+    ax.set_xlabel("Nombre de caractères")
+    ax.set_ylabel("Nombre de titres")
+    st.pyplot(fig)
