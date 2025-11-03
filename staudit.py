@@ -1,45 +1,24 @@
-# ==================================================
-# 📊 Audit de flux produits - Version Dashboard Pro
-# ==================================================
+# ======================================
+# Import des librairies
+# ======================================
+
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
+import numpy as np
+import random
+import requests
+from matplotlib import pyplot as plt 
+import seaborn as sns
 import missingno as msno
 from wordcloud import WordCloud
 
-# ======================================
-# 🎨 CONFIG GLOBALE DE L'APP
-# ======================================
-st.set_page_config(
-    page_title="Audit de flux produits",
-    page_icon="🧩",
-    layout="wide"
-)
-
-# Style Streamlit custom (petit CSS sympa)
-st.markdown("""
-<style>
-    .main {
-        background-color: #F9FAFB;
-        color: #111;
-    }
-    h1, h2, h3 {
-        color: #333;
-    }
-    .stMetric {
-        background: white;
-        padding: 8px;
-        border-radius: 10px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-    }
-</style>
-""", unsafe_allow_html=True)
 
 # ======================================
-# 🏷️ 01. UPLOAD DU FLUX
+# 01. UPLOAD DU FLUX
 # ======================================
-st.title("🧩 Audit de flux produits")
-st.markdown("Analyse automatique de la qualité et du contenu d’un flux e-commerce.")
+st.title("Feed Audit - sample")
+st.markdown("This application is an extract from our automatic shopping feed audit. Contact us if you are interested in a more in-depth analysis.")
+
 st.divider()
 
 st.subheader("📥 1. Import du flux produit")
