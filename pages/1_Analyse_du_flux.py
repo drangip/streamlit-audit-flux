@@ -2,9 +2,9 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import missingno as msno
 
-st.set_page_config(page_title="Analyse du flux", layout="wide")
+st.set_page_config(page_title="Analyse global du flux", layout="wide")
 
-st.header("📊 Analyse du flux")
+st.header("📊 Analyse global du flux")
 
 # Vérifie si le flux existe dans la session
 if "flux_data" not in st.session_state:

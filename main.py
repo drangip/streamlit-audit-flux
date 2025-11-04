@@ -3,7 +3,7 @@ import pandas as pd
 
 st.set_page_config(page_title="Audit de flux produits", page_icon="🧩", layout="wide")
 
-st.title("🧩 Audit de flux produits")
+st.title("Audit de flux produits")
 
 st.markdown("""
 Bienvenue dans ton outil d’audit de flux produits !  
