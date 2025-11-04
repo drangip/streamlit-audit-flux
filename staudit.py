@@ -15,12 +15,13 @@ from wordcloud import WordCloud
 # ======================================
 # Setup de la page
 # ======================================
+
+
 st.set_page_config(
-    page_title="Shopping feed audit - sample",
-    page_icon="🔍",
+    page_title="Shopping feed audit - sample", page_icon="🔍",
 )
 
-st.sidebar.success("Import a CSV file to get started!")
+st.sidebar("Shopping feed audit - sample")
 
 st.write("# Welcome to our automatic shopping feed audit!")
 
@@ -28,6 +29,15 @@ st.markdown(
     """
 This is a sample Streamlit application that performs an automatic audit of a shopping feed (product data file).
 """
+)
+
+
+st.set_page_config(page_title="Import your csv fils", page_icon="📥")
+
+st.markdown("Import your csv fils")
+st.sidebar.header("Import your csv fils")
+st.write(
+    """You can upload your product feed in CSV format, and the application will analyze it and provide insights on data quality, missing values, and product title analysis."""
 )
 
 
