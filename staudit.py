@@ -12,6 +12,25 @@ import seaborn as sns
 import missingno as msno
 from wordcloud import WordCloud
 
+# ======================================
+# Setup de la page
+# ======================================
+st.set_page_config(
+    page_title="Shopping feed audit - sample",
+    page_icon="🔍",
+)
+
+st.sidebar.success("Import a CSV file to get started!")
+
+st.write("# Welcome to our automatic shopping feed audit!")
+
+st.markdown(
+    """
+This is a sample Streamlit application that performs an automatic audit of a shopping feed (product data file).
+"""
+)
+
+
 # =========================================================
 # FONCTION : détection automatique du séparateur
 # =========================================================
